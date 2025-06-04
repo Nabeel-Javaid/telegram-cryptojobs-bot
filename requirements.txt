@@ -6,4 +6,3 @@ apscheduler==3.10.4
 redis==5.0.1
 pytz==2023.3
 setuptools==69.0.2
-pkg_resources==0.0.0
