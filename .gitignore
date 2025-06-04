@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Environment
+bin/
+include/
+lib/
+lib64/
+share/
+pyvenv.cfg
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Data files
+data/
+*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
