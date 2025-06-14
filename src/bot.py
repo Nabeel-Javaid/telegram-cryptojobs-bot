@@ -409,7 +409,7 @@ async def latest_jobs(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     
     try:
         # Fetch jobs from RSS feed
-        jobs = await rss_parser.get_jobs()
+        jobs = rss_parser.fetch_jobs()
         
         # Filter jobs based on user preferences
         filtered_jobs = check_job_filters(jobs, chat_id)
@@ -658,7 +658,7 @@ async def check_new_jobs(context: ContextTypes.DEFAULT_TYPE) -> None:
             return
         
         # Fetch jobs from RSS feed
-        jobs = await rss_parser.get_jobs()
+        jobs = rss_parser.fetch_jobs()
         
         # Get last check time
         last_check_time = storage.get_last_check_time()
