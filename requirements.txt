@@ -5,4 +5,4 @@ feedparser==6.0.8
 apscheduler==3.9.1
 redis==4.3.6
 pytz==2022.7
-setuptools==65.5.0
+setuptools==59.6.0
