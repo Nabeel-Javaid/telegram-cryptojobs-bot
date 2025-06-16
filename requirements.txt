@@ -1,8 +1,8 @@
 python-telegram-bot==13.12
-requests==2.31.0
-python-dotenv==1.0.0
-feedparser==6.0.10
-apscheduler==3.10.4
-redis==5.0.1
-pytz==2023.3
-setuptools==69.0.2
+requests==2.27.1
+python-dotenv==0.19.2
+feedparser==6.0.8
+apscheduler==3.9.1
+redis==4.5.4
+pytz==2022.7
+setuptools==65.5.0
