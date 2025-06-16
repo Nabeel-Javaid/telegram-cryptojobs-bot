@@ -1,4 +1,4 @@
-python-telegram-bot==13.12
+python-telegram-bot==12.8
 requests==2.27.1
 python-dotenv==0.19.2
 feedparser==6.0.8

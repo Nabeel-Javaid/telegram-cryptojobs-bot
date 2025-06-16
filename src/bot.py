@@ -2,16 +2,15 @@ import logging
 import asyncio
 from datetime import datetime
 from typing import List
-from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
-from telegram import ParseMode
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove, ParseMode
 from telegram.ext import (
-    Application,
+    Updater,
     CommandHandler,
-    ContextTypes,
+    CallbackContext,
     JobQueue,
     ConversationHandler,
     MessageHandler,
-    filters,
+    Filters,
     CallbackQueryHandler
 )
 
