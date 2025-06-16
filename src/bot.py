@@ -624,7 +624,7 @@ async def save_job(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     
     # Save job to favorites
-    storage.add_favorite_job(chat_id, job.guid, job.to_dict())
+    storage.save_favorite_job(chat_id, job.guid, job.to_dict())
     
     # Update the inline keyboard to show job was saved
     keyboard = [
