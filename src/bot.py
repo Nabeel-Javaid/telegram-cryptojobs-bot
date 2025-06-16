@@ -805,6 +805,8 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     try:
         # Send error message to user
         if update and update.effective_chat:
+            # For callback queries, use the bot.send_message instead of reply_text
+            # since update.message might be None
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text="❌ An error occurred. Please try again later.",
@@ -925,8 +927,8 @@ def main() -> None:
         # Fallback to basic filter handler
         filters_conv_handler = ConversationHandler(
             entry_points=[
-                CommandHandler("filters", filters_command),
-                CommandHandler("filter", filters_command)
+                CommandHandler("filters", legacy_filters_command),
+                CommandHandler("filter", legacy_filters_command)
             ],
             states={
                 SELECTING_JOB_TYPE: [
@@ -961,9 +963,19 @@ def main() -> None:
 if __name__ == '__main__':
     main()
 
-async def filters_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def legacy_filters_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Legacy filter command handler - redirects to the new filters system"""
-    return await filters_command(update, context)
+    # Import and call the filters command from the filters module
+    try:
+        from src.filters import filters_command as new_filters_command
+        return await new_filters_command(update, context)
+    except ImportError:
+        # Fallback if filters module is not available
+        await update.message.reply_text(
+            "Filter system is not available. Please try again later.",
+            reply_markup=MAIN_MENU_KEYBOARD
+        )
+        return ConversationHandler.END
 
 async def set_job_type(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Legacy method for backward compatibility"""
