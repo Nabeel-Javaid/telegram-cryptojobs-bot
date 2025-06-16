@@ -3,6 +3,6 @@ requests==2.27.1
 python-dotenv==0.19.2
 feedparser==6.0.8
 apscheduler==3.9.1
-redis==4.5.4
+redis==4.3.6
 pytz==2022.7
 setuptools==65.5.0
