@@ -29,7 +29,10 @@ class Storage:
     def is_job_seen(self, job_guid: str) -> bool:
         raise NotImplementedError
         
-    def get_seen_jobs(self) -> Set[str]:
+    def get_seen_jobs(self, chat_id: int = None) -> Set[str]:
+        raise NotImplementedError
+        
+    def add_seen_job(self, chat_id: int, job_guid: str) -> None:
         raise NotImplementedError
         
     def set_user_job_type(self, chat_id: int, job_type: str) -> None:
@@ -72,6 +75,12 @@ class Storage:
         raise NotImplementedError
         
     def get_favorite_jobs(self, chat_id: int) -> Dict:
+        raise NotImplementedError
+        
+    def get_last_check_time(self) -> Optional[datetime]:
+        raise NotImplementedError
+        
+    def set_last_check_time(self, check_time: datetime) -> None:
         raise NotImplementedError
 
 
@@ -155,9 +164,37 @@ class FileStorage(Storage):
         """Check if job has been seen"""
         return job_guid in self.get_seen_jobs()
         
-    def get_seen_jobs(self) -> Set[str]:
-        """Get all seen job GUIDs"""
-        return set(self._load_json(self.seen_jobs_file))
+    def get_seen_jobs(self, chat_id: int = None) -> Set[str]:
+        """Get seen job GUIDs for a specific user or all users"""
+        if chat_id is None:
+            # Return global seen jobs for backwards compatibility
+            return set(self._load_json(self.seen_jobs_file))
+        else:
+            # Return user-specific seen jobs
+            user_seen_file = os.path.join(self.data_dir, f"seen_jobs_{chat_id}.json")
+            if os.path.exists(user_seen_file):
+                return set(self._load_json(user_seen_file))
+            return set()
+            
+    def add_seen_job(self, chat_id: int, job_guid: str) -> None:
+        """Add a seen job for a specific user"""
+        user_seen_file = os.path.join(self.data_dir, f"seen_jobs_{chat_id}.json")
+        seen_jobs = set()
+        
+        # Load existing seen jobs if file exists
+        if os.path.exists(user_seen_file):
+            seen_jobs = set(self._load_json(user_seen_file))
+        
+        # Add new seen job
+        seen_jobs.add(job_guid)
+        
+        # Keep only recent jobs to prevent file from growing too large
+        seen_jobs_list = list(seen_jobs)
+        if len(seen_jobs_list) > 1000:
+            seen_jobs_list = seen_jobs_list[-1000:]
+            
+        self._save_json(user_seen_file, seen_jobs_list)
+        logger.info(f"Added seen job {job_guid} for user {chat_id}")
         
     def set_user_job_type(self, chat_id: int, job_type: str) -> None:
         """Set job type preference for a user (legacy single filter method)"""
@@ -335,6 +372,32 @@ class FileStorage(Storage):
         
         return {}
 
+    def get_last_check_time(self) -> Optional[datetime]:
+        """Get the last check time for job updates"""
+        last_check_file = os.path.join(self.data_dir, "last_check_time.json")
+        
+        if os.path.exists(last_check_file):
+            try:
+                with open(last_check_file, 'r') as f:
+                    data = json.load(f)
+                    if 'last_check_time' in data:
+                        return datetime.fromisoformat(data['last_check_time'])
+            except (json.JSONDecodeError, ValueError):
+                pass
+        
+        return None
+        
+    def set_last_check_time(self, check_time: datetime) -> None:
+        """Set the last check time for job updates"""
+        last_check_file = os.path.join(self.data_dir, "last_check_time.json")
+        
+        data = {'last_check_time': check_time.isoformat()}
+        
+        with open(last_check_file, 'w') as f:
+            json.dump(data, f)
+        
+        logger.info(f"Set last check time: {check_time}")
+
 
 class RedisStorage(Storage):
     """Redis-based storage for production deployments"""
@@ -375,11 +438,23 @@ class RedisStorage(Storage):
         """Check if job has been seen"""
         return self.redis_client.exists(f"cryptojobs:job:{job_guid}") > 0
         
-    def get_seen_jobs(self) -> Set[str]:
-        """Get all seen job GUIDs"""
-        # Note: This is more expensive with Redis, avoid if possible
-        keys = self.redis_client.keys("cryptojobs:job:*")
-        return {key.split(":")[-1] for key in keys}
+    def get_seen_jobs(self, chat_id: int = None) -> Set[str]:
+        """Get seen job GUIDs for a specific user or all users"""
+        if chat_id is None:
+            # Return global seen jobs for backwards compatibility
+            keys = self.redis_client.keys("cryptojobs:job:*")
+            return {key.split(":")[-1] for key in keys}
+        else:
+            # Return user-specific seen jobs
+            seen_jobs = self.redis_client.smembers(f"cryptojobs:user:{chat_id}:seen_jobs")
+            return set(seen_jobs) if seen_jobs else set()
+            
+    def add_seen_job(self, chat_id: int, job_guid: str) -> None:
+        """Add a seen job for a specific user"""
+        self.redis_client.sadd(f"cryptojobs:user:{chat_id}:seen_jobs", job_guid)
+        # Set TTL of 30 days to prevent memory issues
+        self.redis_client.expire(f"cryptojobs:user:{chat_id}:seen_jobs", 60 * 60 * 24 * 30)
+        logger.info(f"Added seen job {job_guid} for user {chat_id}")
         
     def set_user_job_type(self, chat_id: int, job_type: str) -> None:
         """Set job type preference for a user (legacy single filter method)"""
@@ -462,6 +537,23 @@ class RedisStorage(Storage):
                 favorites[job_guid] = json.loads(job_data)
         
         return favorites
+
+    def get_last_check_time(self) -> Optional[datetime]:
+        """Get the last check time for job updates"""
+        last_check_str = self.redis_client.get("cryptojobs:last_check_time")
+        
+        if last_check_str:
+            try:
+                return datetime.fromisoformat(last_check_str)
+            except ValueError:
+                pass
+        
+        return None
+        
+    def set_last_check_time(self, check_time: datetime) -> None:
+        """Set the last check time for job updates"""
+        self.redis_client.set("cryptojobs:last_check_time", check_time.isoformat())
+        logger.info(f"Set last check time: {check_time}")
 
 
 def get_storage(redis_url: Optional[str] = None) -> Storage:
