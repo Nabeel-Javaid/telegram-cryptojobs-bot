@@ -901,9 +901,6 @@ async def remove_favorite(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "✅ Job removed from favorites.",
         reply_markup=None
     )
-    
-    # Show updated favorites
-    await favorites_command(update, context)
 
 
 def main() -> None:
