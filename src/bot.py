@@ -809,7 +809,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             # since update.message might be None
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="❌ An error occurred. Please try again later.",
+                # text="❌ An error occurred. Please try again later.",
                 reply_markup=MAIN_MENU_KEYBOARD
             )
     except Exception as e:
