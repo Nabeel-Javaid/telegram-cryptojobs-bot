@@ -1,8 +1,9 @@
-python-telegram-bot==12.8
+python-telegram-bot==20.7
 requests==2.27.1
 python-dotenv==0.19.2
 feedparser==6.0.8
-apscheduler==3.9.1
+apscheduler==3.10.4
 redis==4.3.6
 pytz==2022.7
 setuptools==59.6.0
+beautifulsoup4==4.12.2

@@ -2,15 +2,15 @@ import logging
 import asyncio
 from datetime import datetime
 from typing import List
-from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove, ParseMode
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
+from telegram.constants import ParseMode
 from telegram.ext import (
-    Updater,
+    Application,
     CommandHandler,
-    CallbackContext,
-    JobQueue,
+    ContextTypes,
     ConversationHandler,
     MessageHandler,
-    Filters,
+    filters,
     CallbackQueryHandler
 )
 
@@ -956,7 +956,7 @@ def main() -> None:
     
     # Start the Bot
     logger.info("Starting bot...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    application.run_polling()
 
 
 if __name__ == '__main__':
